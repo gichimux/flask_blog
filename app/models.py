@@ -119,6 +119,39 @@ class Blog_post(db.Model):
     like_num = db.relationship('Like', backref='blog_post', lazy='dynamic')
     comments = db.relationship('Comment', backref='blog_post', lazy='dynamic')
 
+    @staticmethod
+    def preview_body(target, value, oldvalue, initiator):
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'img', 'blockquote', 'code','em', 'i', 'li', 'ol', 'pre', 'strong', 'ul', 'h1', 'h2','h3', 'p']
+        target.body_html = bleach.linkify(bleach.clean(markdown(value, output_format='html'),tags=allowed_tags, strip=True,attributes={'*': ['class'],'a': ['href', 'rel'],'img': ['src', 'alt'],}))
+
+    def to_json(self):
+        json_post = {
+            'url': url_for('api.get_post', id=self.id, _external=True),
+            'title': self.title,
+            'body': self.body,
+            'body_html': self.body_html,
+            'timestamp': self.timestamp,
+            'author': url_for('api.get_user', id=self.author_id, _external=True),
+            'comments': url_for('api.get_post_comments', id=self.id, _external=True),
+            'comment_count': self.comments.count()
+        }
+        return json_post
+
+    @staticmethod
+    def from_json(json_post):
+        body = json_post.get('body')
+        title = json_post.get('title')
+        if body is None or body == '':
+            raise ValidationError('post does not have a body')
+        if title is None or title == '':
+            raise ValidationError('post does not have a title')
+        return Post(body=body,title=title)
+
+    def __repr__(self):
+        return '<Post %r>' % (self.body)
+db.event.listen(Post.body, 'set', Post.preview_body)
+
+
 class Comment(db.Model):
     __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
@@ -160,3 +193,9 @@ class Role(db.Model):
 
     users = db.relationship('User', backref = 'role', lazy='dynamic')
 
+class Permission:
+    FOLLOW = 0x01
+    COMMENT = 0x02
+    WRITE_ARTICLES = 0x04
+    MODERATE_COMMENTS = 0x08
+    ADMINISTER = 0x80
