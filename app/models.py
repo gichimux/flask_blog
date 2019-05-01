@@ -44,6 +44,62 @@ class User(UserMixin,db.Model):
             follower = Follow(follower=self, followed=user)
             db.session.add(follower)
 
+     def unfollow(self, user):
+            follower =self.followed.filter_by(followed_id=user.id).first()
+        if follower:
+            db.session.delete(follower)
+    
+    def is_following(self, user):
+        return self.followed.filter_by(followed_id=user.id).first() is not None
+    def is_followed_by(self, user):
+        return self.followers.filter_by(follower_id=user.id).first() is not None
+
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id==Post.author_id).filter(
+            Follow.follower_id==self.id)
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def gravatar(self, size):
+        return 'http://www.gravatar.com/avatar/' + md5(self.email.encode('utf-8')).hexdigest() + '?d=mm&s=' + str(size)
+
+    def generate_auth_token(self, expiration):
+        s = Serializer(current_app.config['ECRET_KEY'],expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return None
+        return User.query.get(data['id'])
+
+    def to_json(self):
+        json_user = {
+            'url': url_for('api.get_user', id=self.id, _external=True),
+            'nickname': self.nickname,
+            'last_seen': self.last_seen,
+            'posts': url_for('api.get_user_posts', id=self.id, _external=True),
+            'followed_posts': url_for('api.get_user_followed_posts', id=self.id, _external=True),
+            'post_count': self.posts.count()
+        }
+        return json_user 
+
+    def __repr__(self):
+        return '<User %r>' % (self.nickname)        
+
 class Blog_post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key = True)
@@ -98,3 +154,4 @@ class Role(db.Model):
     permissions = db.Column(db.Integer)
 
     users = db.relationship('User', backref = 'role', lazy='dynamic')
+
