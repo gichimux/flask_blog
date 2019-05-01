@@ -71,3 +71,12 @@ class Comment(db.Model):
 
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+
+class Admin(db.Model):
+    __tablename__ = 'admin'
+    id = db.Column(db.Integer, primary_key=True)
+    notice = db.Column(db.String(25))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.datetime.utcnow())
+
+    def __repr__(self):
+        return '<Admin %r>' % (self.notice)
