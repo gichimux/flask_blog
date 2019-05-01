@@ -80,3 +80,12 @@ class Admin(db.Model):
 
     def __repr__(self):
         return '<Admin %r>' % (self.notice)
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+    id = db.Column(db.Integer, primary_key=True)
+    unread = db.Column(db.Boolean, default=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.datetime.utcnow())
+
+    liker_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
