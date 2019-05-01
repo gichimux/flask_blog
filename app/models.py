@@ -98,7 +98,11 @@ class User(UserMixin,db.Model):
         return json_user 
 
     def __repr__(self):
-        return '<User %r>' % (self.nickname)        
+        return '<User %r>' % (self.nickname)    
+
+@lm.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))    
 
 class Blog_post(db.Model):
     __tablename__ = 'posts'
