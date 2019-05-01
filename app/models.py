@@ -104,6 +104,7 @@ class User(UserMixin,db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))    
 
+@whooshee.register_model('title','body')
 class Blog_post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key = True)
