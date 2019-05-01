@@ -121,20 +121,11 @@ class Blog_post(db.Model):
 
     @staticmethod
     def preview_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'img', 'blockquote', 'code','em', 'i', 'li', 'ol', 'pre', 'strong', 'ul', 'h1', 'h2','h3', 'p']
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'i' , 'code','em', 'img', 'blockquote', 'li', 'ol', 'pre', 'strong', 'ul', 'h1', 'h2','h3', 'p']
         target.body_html = bleach.linkify(bleach.clean(markdown(value, output_format='html'),tags=allowed_tags, strip=True,attributes={'*': ['class'],'a': ['href', 'rel'],'img': ['src', 'alt'],}))
 
     def to_json(self):
-        json_post = {
-            'url': url_for('api.get_post', id=self.id, _external=True),
-            'title': self.title,
-            'body': self.body,
-            'body_html': self.body_html,
-            'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id, _external=True),
-            'comments': url_for('api.get_post_comments', id=self.id, _external=True),
-            'comment_count': self.comments.count()
-        }
+        json_post = {'url': url_for('api.get_post', id=self.id, _external=True),'title': self.title,'body': self.body,'body_html': self.body_html,'timestamp': self.timestamp,'author': url_for('api.get_user', id=self.author_id, _external=True),'comments': url_for('api.get_post_comments', id=self.id, _external=True),'comment_count': self.comments.count()}
         return json_post
 
     @staticmethod
@@ -142,9 +133,9 @@ class Blog_post(db.Model):
         body = json_post.get('body')
         title = json_post.get('title')
         if body is None or body == '':
-            raise ValidationError('post does not have a body')
+            raise ValidationError('The blog must have a body')
         if title is None or title == '':
-            raise ValidationError('post does not have a title')
+            raise ValidationError('You must provide a title')
         return Post(body=body,title=title)
 
     def __repr__(self):
@@ -199,3 +190,13 @@ class Permission:
     WRITE_ARTICLES = 0x04
     MODERATE_COMMENTS = 0x08
     ADMINISTER = 0x80
+
+
+class AnonymousUser(AnonymousUserMixin):
+    def operation(self, permissions):
+        return False
+
+    def is_administrator(self):
+        return False
+
+lm.anonymous_user = AnonymousUser
