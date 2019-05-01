@@ -57,3 +57,17 @@ class Blog_post(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     like_num = db.relationship('Like', backref='blog_post', lazy='dynamic')
     comments = db.relationship('Comment', backref='blog_post', lazy='dynamic')
+
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.datetime.utcnow())
+    disabled = db.Column(db.Boolean)
+    comment_type = db.Column(db.String(64), default='comment')
+    reply_to = db.Column(db.String(128), default='notReply')
+    unread = db.Column(db.Boolean)
+
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
