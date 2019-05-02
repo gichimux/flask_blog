@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from flask import render_template, redirect, url_for, request, current_app
 
 from .. import db
-from ..models import Comment, Post, Admin, User
+from ..models import Comment, Blog_post, Admin, User
 from . import admin
 from ..decorators import admin_required
 from ..user.forms import SearchForm
@@ -70,12 +70,7 @@ def admin_post():
         error_out=False
     )
     posts = pagination.items
-    return render_template('admin/admin_post.html',
-                           posts=posts,
-                           pagination=pagination,
-                           page=page,
-                           nums = len(posts),
-                           title='Admin Post')
+    return render_template('admin/admin_post.html',posts=posts,pagination=pagination,page=page,nums = len(posts),title='Admin Post')
 
 # blog post recovery
 @admin.route('/recoverpost/<int:id>')
