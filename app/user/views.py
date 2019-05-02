@@ -245,29 +245,29 @@ def edit(id):
 def follow(nickname):
     user = User.query.filter_by(nickname=nickname).first()
     if user is None:
-        flash('无效的用户。')
+        flash('Invalid user')
         return redirect(url_for('user.index'))
     if current_user.is_following(user):
-        flash('你已经关注了此用户。')
+        flash('Already following user')
         return redirect(url_for('user.users', nickname=nickname))
     current_user.follow(user)
-    flash('你已关注 %s。' % nickname)
+    flash('Already Following %s。' % nickname)
     return redirect(url_for('user.users', nickname=nickname))
 
-# 取消关注
+# unfollow
 @user.route('/unfollow/<nickname>')
 @login_required
 @permission_required(Permission.FOLLOW)
 def unfollow(nickname):
     user = User.query.filter_by(nickname=nickname).first()
     if user is None:
-        flash('无效的用户。')
+        flash('User is invalid')
         return redirect(url_for('user.index'))
     if not current_user.is_following(user):
-        flash('你已经取消了此用户的关注。')
+        flash('You have unfollowed this user')
         return redirect(url_for('user.users', nickname=nickname))
     current_user.unfollow(user)
-    flash('你已取消关注 %s 。' % nickname)
+    flash('You have Unfollowed %s 。' % nickname)
     return redirect(url_for('user.users', nickname=nickname))
 
 
@@ -277,7 +277,7 @@ def follows(nickname):
 
     user = User.query.filter_by(nickname=nickname).first()
     if user is None:
-        flash('无效的用户。')
+        flash('User is invalid')
         return redirect(url_for('user.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followers.paginate(
@@ -299,13 +299,8 @@ def follows(nickname):
         follows = [{'user': i.followed, 'timestamp': i.timestamp}
                    for i in pagination2.items]
 
-    return render_template('user/follow.html', user=user,
-                           title='关注',
-                           show_followed=show_followed,
-                           pagination=pagination,
-                           Permission=Permission,
-                           follows=follows)
-# 设置cookies
+    return render_template('user/follow.html', user=user,title='follow', show_followed=show_followed, pagination=pagination, Permission=Permission,follows=follows)
+#cookies
 @user.route('/followers/<nickname>')
 def show_follower(nickname):
     resp = make_response(redirect(url_for('user.follows',nickname=nickname)))
@@ -317,17 +312,14 @@ def show_followed(nickname):
     resp.set_cookie('show_followed','',max_age=30*24*60*60)
     return resp
 
-# 全文搜索
+# search routes
 @user.route('/search', methods=['GET','POST'])
 def search():
     if not g.search_form.validate_on_submit():
         return redirect(url_for('user.index'))
     return redirect(url_for('user.search_results', query=g.search_form.search.data))
-# 搜索结果
+
 @user.route('/search_results/<query>')
 def search_results(query):
     results = Post.query.whooshee_search(query).all()
-    return render_template('user/search_results.html',
-                           query=query,
-                           title='搜索结果',
-                           posts=results)
+    return render_template('user/search_results.html',query=query,title='Search-results',posts=results)
