@@ -8,15 +8,14 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    BABEL_DEFAULT_LOCALE = 'zh_Hans_CN'
-
     # email support
-    MAIL_SERVER = 'smtp.163.com'
-    MAIL_PORT = 25
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_SUBJECT_PREFIX = '[simple]'
-    MAIL_SENDER = 'administrator'
+    SUBJECT_PREFIX = 'flask blog'
+    SENDER_EMAIL = 'gichimu.dev@gmail.com'
     ADMINMAIL = os.environ.get('ADMIN_MAIL')
 
     POSTS_PER_PAGE = 10
@@ -31,20 +30,28 @@ class Config:
     def init_app(app):
         pass
 
-class DevelopmentConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-                              'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
+class DevConfig(Config):
+    '''
+    Development  configuration child class
+    Args:
+        Config: The parent configuration class with General configuration settings
+    '''
+    
+
     DEBUG = True
 
-class TestingConfig(Config):
+class TestConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
+        SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://gichimu:trio.com@localhost/flask_blog_test'
 
-class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'data.sqlite')
-
+class ProdConfig(Config):
+     '''
+    Production  configuration child class
+    Args:
+        Config: The parent configuration class with General configuration settings
+    '''
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
@@ -85,9 +92,9 @@ class HerokuConfig(ProductionConfig):
         app.logger.addHandler(file_handler)
 
 config = {
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'production': ProductionConfig,
+    'development': DevConfig,
+    'testing': TestConfig,
+    'production': ProdConfig,
     'heroku': HerokuConfig,
-    'default': DevelopmentConfig
+    'default': DevConfig
 }
